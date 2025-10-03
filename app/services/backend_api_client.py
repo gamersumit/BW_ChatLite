@@ -147,3 +147,32 @@ class BackendAPIClient:
         except Exception as e:
             logger.error(f"Failed to process embeddings via API: {e}")
             return None
+
+    def upload_screenshot(self, website_id: str, screenshot_base64: str) -> bool:
+        """Upload website screenshot to backend"""
+        try:
+            response = requests.post(
+                f"{self.backend_url}/api/v1/websites/{website_id}/screenshot",
+                json={"screenshot_base64": screenshot_base64},
+                timeout=60,  # 60 second timeout for upload
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    logger.info(
+                        f"Screenshot uploaded successfully for website {website_id}"
+                    )
+                    return True
+                else:
+                    logger.error(f"Screenshot upload failed: {result.get('message')}")
+                    return False
+            else:
+                logger.error(
+                    f"API error uploading screenshot: {response.status_code} - {response.text}"
+                )
+                return False
+
+        except Exception as e:
+            logger.error(f"Failed to upload screenshot via API: {e}")
+            return False
