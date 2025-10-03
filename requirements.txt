@@ -1,6 +1,6 @@
 # Celery Worker Requirements
 celery[redis]==5.3.4
-redis==4.5.5
+redis==4.6.0
 
 # Web scraping (static HTML + SPA)
 aiohttp==3.9.1
