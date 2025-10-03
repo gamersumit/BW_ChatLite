@@ -1,0 +1,19 @@
+services:
+  # Celery Worker Background Service
+  - type: worker
+    name: chatlite-celery-worker
+    env: python
+    region: oregon
+    plan: starter
+    rootDir: celery-worker
+    buildCommand: pip install -r requirements.txt && playwright install-deps && playwright install chromium
+    startCommand: bash start_render.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: REDIS_URL
+        sync: false
+      - key: BACKEND_API_URL
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO

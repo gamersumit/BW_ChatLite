@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Celery Worker Service
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatlite-celery-worker
+    restart: unless-stopped
+    environment:
+      # Redis (use host.docker.internal for local Redis or specify Redis container)
+      - REDIS_URL=${REDIS_URL:-redis://host.docker.internal:6379/0}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-${REDIS_URL}}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-${REDIS_URL}}
+
+      # Supabase
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+
+      # OpenAI
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+
+      # Environment
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+
+    volumes:
+      # Mount logs for persistence
+      - ./logs:/app/logs
+      # Mount .env file
+      - ./.env:/app/.env
+
+    networks:
+      - chatlite-network
+
+    extra_hosts:
+      # Allow container to access host machine (for local Redis)
+      - "host.docker.internal:host-gateway"
+
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.celery_app:celery_app inspect ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  chatlite-network:
+    driver: bridge
